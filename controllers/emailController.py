@@ -1,27 +1,20 @@
-from email.mime.text import MIMEText
+import os
 import smtplib
-import json
-
-def load_email_config():
-    try:
-        with open('controllers/email_config.json', 'r') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        print("email_config.json not found.")
-        return None
-
-    except json.JSONDecodeError as e:
-        print(f"Error decoding email_config.json: {e}")
-        return None
-
-import smtplib
+from dotenv import load_dotenv
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+
+load_dotenv()
+
 def send_reset_email(to_email, reset_link):
-    email_config = load_email_config()
-    if not email_config or not all(k in email_config for k in ['smtp_server', 'smtp_port', 'smtp_user', 'smtp_password']):
-        raise Exception("Email configuration incomplete or missing.")
+    smtp_server = os.getenv("SMTP_SERVER")
+    smtp_port = os.getenv("SMTP_PORT")
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+
+    if not all([smtp_server, smtp_port, smtp_user, smtp_password]):
+        raise Exception("Email configuration is incomplete. Check .env file.")
 
     subject = "Password Reset Request"
 
@@ -77,17 +70,16 @@ def send_reset_email(to_email, reset_link):
     """
 
     msg = MIMEMultipart()
-    msg['From'] = email_config['smtp_user']
+    msg['From'] = smtp_user
     msg['To'] = to_email
     msg['Subject'] = subject
-
     msg.attach(MIMEText(html_body, 'html'))
 
     try:
-        with smtplib.SMTP(email_config['smtp_server'], email_config['smtp_port']) as server:
-            server.starttls()  # Secure connection
-            server.login(email_config['smtp_user'], email_config['smtp_password'])
-            server.sendmail(email_config['smtp_user'], to_email, msg.as_string())
+        with smtplib.SMTP(smtp_server, int(smtp_port)) as server:
+            server.starttls() 
+            server.login(smtp_user, smtp_password)
+            server.sendmail(smtp_user, to_email, msg.as_string())
 
         print(f"Reset email successfully sent to {to_email}")
     except Exception as e:

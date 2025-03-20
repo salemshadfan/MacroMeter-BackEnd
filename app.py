@@ -25,24 +25,22 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-def load_config(path):
-    try:
-        with open(path, "r") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        print(f"{path} not found.")
-        return None
-    except json.JSONDecodeError as e:
-        print(f"Error decoding JSON: {e}")
-        return None
 
 def get_db_connection():
-    db_config = load_config("db_config.json")
-    if db_config is None:
-        raise Exception("Database configuration not found.")
+    db_config = {
+        "host": os.getenv("DB_HOST"),
+        "dbname": os.getenv("DB_NAME"),
+        "user": os.getenv("DB_USER"),
+        "password": os.getenv("DB_PASSWORD"),
+        "port": os.getenv("DB_PORT", 5432)  # Default to 5432 if not set
+    }
+
+    if not all(db_config.values()):
+        raise Exception("Database configuration is incomplete. Check .env file.")
+
     return psycopg2.connect(**db_config)
 
-keys = load_config("keys.json")
+
 JWT_SECRET = os.getenv("JWT_SECRET")
 if not JWT_SECRET:
     raise Exception("JWT secret not found.")
@@ -144,7 +142,10 @@ def login():
         print("Error during login:", e)
         return jsonify({"error": "Server error"}), 500
     
-
+@app.route('/api/auth-check', methods=['GET'])
+@jwt_required()
+def auth_check():
+    return jsonify({"message": "Valid token", "user": get_jwt_identity()}), 200
 
 @app.route('/api/analyze-image', methods=['POST'])
 @jwt_required()
@@ -163,13 +164,17 @@ def analyze_image():
         image_path = os.path.join(app.config['UPLOAD_FOLDER'], jpeg_filename)
         original_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
+        # Ensure upload folder exists
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
         file.save(original_path)
 
         try:
             img = Image.open(original_path)
             if img.mode == "RGBA":
-                img = Image.new("RGB", img.size, (255, 255, 255))
-                img.paste(img, mask=img.split()[3])
+                new_img = Image.new("RGB", img.size, (255, 255, 255))
+                new_img.paste(img, mask=img.split()[3])
+                img = new_img
             img = img.convert("RGB")
             img.save(image_path, "JPEG")
             os.remove(original_path)
@@ -179,20 +184,25 @@ def analyze_image():
         results = []
         for i in range(4):
             try:
+                print(f"Processing image: {image_path}")  # Debug
                 prompt = api.generate_gpt_prompt(image_path)
+                print(f"Calling GPT API with prompt: {prompt}")  # Debug
                 result = api.GPT_Analyze(prompt, image_path)
                 json_data = api.convert_to_json(result)
                 results.append(json_data)
             except Exception as e:
                 return jsonify({"error": f"AI API call failed on iteration {i+1}", "details": str(e)}), 500
 
-        # Compute average values if numerical and round up to the nearest integer
+        if not results:
+            return jsonify({"error": "AI API did not return any results."}), 500
+
+
         averaged_result = {}
         try:
             for key in results[0]:
-                if isinstance(results[0][key], (int, float)):
-                    values = [res[key] for res in results]
-                    averaged_result[key] = math.ceil(sum(values) / len(values))  # Round up to nearest int
+                values = [res[key] for res in results if isinstance(res[key], (int, float))]
+                if values:  
+                    averaged_result[key] = math.ceil(sum(values) / len(values))
                 else:
                     averaged_result[key] = results[0][key]
         except Exception as e:
@@ -202,7 +212,6 @@ def analyze_image():
     except Exception as e:
         return jsonify({"error": "Unexpected server error", "details": str(e)}), 500
     
-
 @app.route('/history', methods=['GET', 'POST'])
 @jwt_required()
 def manage_history():
