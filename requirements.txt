@@ -1,0 +1,15 @@
+blinker
+click
+Flask
+flask-cors
+itsdangerous
+Jinja2
+MarkupSafe
+psycopg2-binary
+Werkzeug
+bcrypt
+openai
+dotenv
+clarifai
+requests
+flask_jwt_extended
