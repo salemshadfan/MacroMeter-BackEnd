@@ -390,7 +390,7 @@ def reset_password():
             if 'cur' in locals():
                 cur.close()
             conn.close()
-        return render_template('invalidToken.html', message="Invalid token or user not found", token=token, user_id=user_id, utc_now=datetime.now(timezone.utc)), 500
+        return render_template('invalidToken.html', message=f"Error verifying reset token: {e}, type: {type(e).__name__}, token: {token}, user_id: {user_id}"), 500
 
 
 @app.route('/update-password', methods=['POST'])
