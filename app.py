@@ -14,7 +14,7 @@ from werkzeug.utils import secure_filename
 import AI_API as api
 from controllers.emailController import send_reset_email
 
-app = Flask(__name__, static_folder='../assets')
+app = Flask(__name__, static_folder='assets')
 CORS(app)
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
