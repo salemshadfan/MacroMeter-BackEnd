@@ -49,7 +49,7 @@ jwt_manager = JWTManager(app)
 # Backend server can be headless, might not need
 @app.route('/')
 def serve_index():
-    return render_template('invalidToken.html', message="Backend up"), 200
+    return jsonify({"message": "functional"}), 200
 
 
 @app.route('/signup', methods=['POST'])
@@ -324,7 +324,7 @@ def reset_link():
         user_id, user_email = user
 
         reset_token = create_access_token(identity=str(user_id), expires_delta=timedelta(hours=1))
-        expiry = datetime.now(timezone.utc) + timedelta(hours=1)  # Updated to UTC
+        expiry = datetime.now(timezone.utc) + timedelta(hours=1)
 
         cur.execute("""
             UPDATE users
@@ -346,7 +346,7 @@ def reset_link():
             if 'cur' in locals():
                 cur.close()
             conn.close()
-        return jsonify({'error': 'Failed to process reset request'}), 500
+        return jsonify({'error': f'Failed to process reset request: {e}'}), 500
 
 
 @app.route('/reset-password', methods=['GET'])
@@ -370,13 +370,13 @@ def reset_password():
         if not user:
             cur.close()
             conn.close()
-            return render_template('invalidToken.html', message='Invalid token or user not found'), 403
+            return jsonify({'error': f'Token or user not found'}), 404
 
         user_id, reset_expiry = user
         if reset_expiry < datetime.now(timezone.utc):
             cur.close()
             conn.close()
-            return render_template('invalidToken.html', message="Token has expired"), 498
+            return jsonify({'error': 'Token is expired'}), 498
 
         cur.close()
         conn.close()
@@ -388,7 +388,7 @@ def reset_password():
             if 'cur' in locals():
                 cur.close()
             conn.close()
-        return render_template('invalidToken.html', message=f"Error verifying reset token: {e}, type: {type(e).__name__}, token: {token}, user_id: {user_id}"), 505
+        return jsonify({'error': f'Failed to process reset request: {e}'}), 500
 
 
 @app.route('/update-password', methods=['POST'])

@@ -63,8 +63,8 @@ def send_reset_email(to_email, reset_link):
             <p><a class="btn" href="{reset_link}" target="_blank">Reset Password</a></p>
             <p>If the button doesn't work, copy and paste the link below into your browser:</p>
             <p><a href="{reset_link}" target="_blank">{reset_link}</a></p>
-            <p>This link will expire in 1 hour. If you didn’t request this, you can ignore this email.</p>
-            <div class="footer">Thanks, <br> Your App Team</div>
+            <p>This link will expire in 1 hour. If you didn't request this, you can safely ignore this email.</p>
+            <div class="footer">Thanks, <br> MacroMeter Team</div>
         </div>
     </body>
     </html>
