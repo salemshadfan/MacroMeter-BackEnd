@@ -354,8 +354,6 @@ def reset_password():
     token = request.args.get('token')
     if not token:
         return jsonify({'error': 'Token is required'}), 401
-    
-    user_id = "No user id"
 
     try:
         user_id = decode_token(token)['sub']
@@ -372,9 +370,9 @@ def reset_password():
         if not user:
             cur.close()
             conn.close()
-            return render_template('invalidToken.html', message="Invalid token or user not found", token=token, user_id=user_id, user=user), 403
+            return render_template('invalidToken.html', message='Invalid token or user not found'), 403
 
-        user_id_db, reset_expiry = user
+        user_id, reset_expiry = user
         if reset_expiry < datetime.now(timezone.utc):
             cur.close()
             conn.close()
@@ -390,7 +388,7 @@ def reset_password():
             if 'cur' in locals():
                 cur.close()
             conn.close()
-        return render_template('invalidToken.html', message=f"Error verifying reset token: {e}, type: {type(e).__name__}, token: {token}, user_id: {user_id}"), 500
+        return render_template('invalidToken.html', message=f"Error verifying reset token: {e}, type: {type(e).__name__}, token: {token}, user_id: {user_id}"), 505
 
 
 @app.route('/update-password', methods=['POST'])
