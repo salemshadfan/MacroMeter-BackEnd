@@ -49,7 +49,7 @@ jwt_manager = JWTManager(app)
 # Backend server can be headless, might not need
 @app.route('/')
 def serve_index():
-    return send_from_directory('assets', 'index.html')
+    return render_template('invalidToken.html', message="Backend up"), 200
 
 
 @app.route('/signup', methods=['POST'])
