@@ -370,7 +370,7 @@ def reset_password():
         if not user:
             cur.close()
             conn.close()
-            return render_template('invalidToken.html', message="Invalid token or user not found"), 403
+            return render_template('invalidToken.html', message="Invalid token or user not found", token=token, user_id=user_id, user=user), 403
 
         user_id_db, reset_expiry = user
         expiry_dt = datetime.fromisoformat(str(reset_expiry).replace('Z', '+00:00'))
