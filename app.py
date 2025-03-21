@@ -375,8 +375,7 @@ def reset_password():
             return render_template('invalidToken.html', message="Invalid token or user not found", token=token, user_id=user_id, user=user), 403
 
         user_id_db, reset_expiry = user
-        expiry_dt = datetime.fromisoformat(str(reset_expiry).replace('Z', '+00:00'))
-        if expiry_dt < datetime.now(timezone.utc):  # Updated to UTC
+        if reset_expiry < datetime.now(timezone.utc):
             cur.close()
             conn.close()
             return render_template('invalidToken.html', message="Token has expired"), 498
@@ -386,12 +385,12 @@ def reset_password():
         return render_template('resetPassword.html', token=token)
 
     except Exception as e:
-        print(f"Error verifying reset token: {e}")
+        print(f"Error verifying reset token: {e}, type: {type(e).__name__}, token: {token}, user_id: {user_id}")
         if 'conn' in locals():
             if 'cur' in locals():
                 cur.close()
             conn.close()
-        return render_template('invalidToken.html', message="Invalid token or user not found", token=token, user_id=user_id), 500
+        return render_template('invalidToken.html', message="Invalid token or user not found", token=token, user_id=user_id, utc_now=datetime.now(timezone.utc)), 500
 
 
 @app.route('/update-password', methods=['POST'])
