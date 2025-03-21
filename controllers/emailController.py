@@ -1,11 +1,12 @@
 import os
 import smtplib
-from dotenv import load_dotenv
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+from dotenv import load_dotenv
 
 load_dotenv()
+
 
 def send_reset_email(to_email, reset_link):
     smtp_server = os.getenv("SMTP_SERVER")
@@ -77,7 +78,7 @@ def send_reset_email(to_email, reset_link):
 
     try:
         with smtplib.SMTP(smtp_server, int(smtp_port)) as server:
-            server.starttls() 
+            server.starttls()
             server.login(smtp_user, smtp_password)
             server.sendmail(smtp_user, to_email, msg.as_string())
 

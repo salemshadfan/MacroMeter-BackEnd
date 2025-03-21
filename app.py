@@ -1,21 +1,18 @@
-from flask import Flask, request, jsonify, send_from_directory, render_template
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, decode_token
-from controllers.emailController import send_reset_email
-from werkzeug.utils import secure_filename
-from datetime import timedelta, datetime
-from flask_cors import CORS
-import psycopg2
-import requests
-import bcrypt
-import base64
 import json
-import os
-from PIL import Image
-import AI_API as api
-import numpy as np
 import math
+import os
+from datetime import timedelta, datetime
 
+import bcrypt
+import psycopg2
+from PIL import Image
+from flask import Flask, request, jsonify, send_from_directory, render_template
+from flask_cors import CORS
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, decode_token
+from werkzeug.utils import secure_filename
 
+import AI_API as api
+from controllers.emailController import send_reset_email
 
 app = Flask(__name__, static_folder='../assets')
 CORS(app)
@@ -48,10 +45,12 @@ if not JWT_SECRET:
 app.config['JWT_SECRET_KEY'] = JWT_SECRET
 jwt_manager = JWTManager(app)
 
+
 # Backend server can be headless, might not need
 @app.route('/')
 def serve_index():
     return send_from_directory('static', 'index.html')
+
 
 @app.route('/signup', methods=['POST'])
 def signup():
@@ -99,6 +98,7 @@ def signup():
         print("Error during signup:", e)
         return jsonify({"error": "Internal server error"}), 500
 
+
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -141,11 +141,13 @@ def login():
     except Exception as e:
         print("Error during login:", e)
         return jsonify({"error": "Server error"}), 500
-    
+
+
 @app.route('/api/auth-check', methods=['GET'])
 @jwt_required()
 def auth_check():
     return jsonify({"message": "Valid token", "user": get_jwt_identity()}), 200
+
 
 @app.route('/api/analyze-image', methods=['POST'])
 @jwt_required()
@@ -191,17 +193,16 @@ def analyze_image():
                 json_data = api.convert_to_json(result)
                 results.append(json_data)
             except Exception as e:
-                return jsonify({"error": f"AI API call failed on iteration {i+1}", "details": str(e)}), 500
+                return jsonify({"error": f"AI API call failed on iteration {i + 1}", "details": str(e)}), 500
 
         if not results:
             return jsonify({"error": "AI API did not return any results."}), 500
-
 
         averaged_result = {}
         try:
             for key in results[0]:
                 values = [res[key] for res in results if isinstance(res[key], (int, float))]
-                if values:  
+                if values:
                     averaged_result[key] = math.ceil(sum(values) / len(values))
                 else:
                     averaged_result[key] = results[0][key]
@@ -211,7 +212,8 @@ def analyze_image():
         return jsonify(averaged_result)
     except Exception as e:
         return jsonify({"error": "Unexpected server error", "details": str(e)}), 500
-    
+
+
 @app.route('/history', methods=['GET', 'POST'])
 @jwt_required()
 def manage_history():
@@ -274,6 +276,7 @@ def manage_history():
                 conn.close()
             return jsonify({"error": "Failed to add history"}), 500
 
+
 @app.route('/wipe', methods=['GET'])
 @jwt_required()
 def wipe_history():
@@ -298,6 +301,7 @@ def wipe_history():
             cur.close()
             conn.close()
         return jsonify({"error": "Failed to wipe history"}), 500
+
 
 @app.route('/reset-link', methods=['POST'])
 def reset_password():
@@ -329,7 +333,7 @@ def reset_password():
         """, (reset_token, expiry, user_id))
         conn.commit()
 
-        send_reset_email(user_email, f'http://localhost:5000/reset-password?token={reset_token}')
+        send_reset_email(user_email, f'https://macrometer-backend.onrender.com/reset-password?token={reset_token}')
 
         cur.close()
         conn.close()
@@ -343,6 +347,7 @@ def reset_password():
                 cur.close()
             conn.close()
         return jsonify({'error': 'Failed to process reset request'}), 500
+
 
 @app.route('/reset-password', methods=['GET'])
 def verify_reset_token():
@@ -386,6 +391,7 @@ def verify_reset_token():
             conn.close()
         return render_template('invalidToken.html', message="Invalid token or user not found"), 400
 
+
 @app.route('/update-password', methods=['POST'])
 def update_password():
     token = request.form.get('token')
@@ -427,6 +433,7 @@ def update_password():
                 cur.close()
             conn.close()
         return "Failed to reset password", 500
+
 
 @app.route('/feedback', methods=['POST'])
 def store_feedback():
