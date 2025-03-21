@@ -1,7 +1,7 @@
 import json
 import math
 import os
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone  # Added timezone
 
 import bcrypt
 import psycopg2
@@ -324,7 +324,7 @@ def reset_link():
         user_id, user_email = user
 
         reset_token = create_access_token(identity=str(user_id), expires_delta=timedelta(hours=1))
-        expiry = datetime.now() + timedelta(hours=1)
+        expiry = datetime.now(timezone.utc) + timedelta(hours=1)  # Updated to UTC
 
         cur.execute("""
             UPDATE users
@@ -374,7 +374,7 @@ def reset_password():
 
         user_id_db, reset_expiry = user
         expiry_dt = datetime.fromisoformat(str(reset_expiry).replace('Z', '+00:00'))
-        if expiry_dt < datetime.now():
+        if expiry_dt < datetime.now(timezone.utc):  # Updated to UTC
             cur.close()
             conn.close()
             return render_template('invalidToken.html', message="Token has expired"), 498
@@ -409,7 +409,7 @@ def update_password():
             WHERE reset_token = %s AND id = %s
         """, (token, user_id))
         user = cur.fetchone()
-        if not user or datetime.fromisoformat(str(user[1]).replace('Z', '+00:00')) < datetime.now():
+        if not user or datetime.fromisoformat(str(user[1]).replace('Z', '+00:00')) < datetime.now(timezone.utc):  # Updated to UTC
             cur.close()
             conn.close()
             return "Invalid or expired token", 400
