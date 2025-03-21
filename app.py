@@ -304,7 +304,7 @@ def wipe_history():
 
 
 @app.route('/reset-link', methods=['POST'])
-def reset_password():
+def reset_link():
     data = request.get_json()
     email = data.get('email')
     if not email:
@@ -350,10 +350,10 @@ def reset_password():
 
 
 @app.route('/reset-password', methods=['GET'])
-def verify_reset_token():
+def reset_password():
     token = request.args.get('token')
     if not token:
-        return jsonify({'error': 'Token is required'}), 400
+        return jsonify({'error': 'Token is required'}), 401
 
     try:
         user_id = decode_token(token)['sub']
@@ -370,14 +370,14 @@ def verify_reset_token():
         if not user:
             cur.close()
             conn.close()
-            return render_template('invalidToken.html', message="Invalid token or user not found"), 400
+            return render_template('invalidToken.html', message="Invalid token or user not found"), 403
 
         user_id_db, reset_expiry = user
         expiry_dt = datetime.fromisoformat(str(reset_expiry).replace('Z', '+00:00'))
         if expiry_dt < datetime.now():
             cur.close()
             conn.close()
-            return render_template('invalidToken.html', message="Token has expired"), 400
+            return render_template('invalidToken.html', message="Token has expired"), 498
 
         cur.close()
         conn.close()
@@ -389,7 +389,7 @@ def verify_reset_token():
             if 'cur' in locals():
                 cur.close()
             conn.close()
-        return render_template('invalidToken.html', message="Invalid token or user not found"), 400
+        return render_template('invalidToken.html', message="Invalid token or user not found"), 500
 
 
 @app.route('/update-password', methods=['POST'])
