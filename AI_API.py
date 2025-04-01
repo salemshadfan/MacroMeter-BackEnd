@@ -124,7 +124,7 @@ def generate_gpt_prompt(image_path):
                     
                 Here are the food items and their confidence scores:
                 {', '.join(filtered_concepts)}
-
+                Consider the top 2 highest confidence scores only.
 
                 Always say success at the very first line before anything else.
                 You should return only one food item and provide the nutritional values in key:value format for each item. Do not provide any ranges, extra explanation, or punctuation like periods at the end nor annotations (''' the triple qoutes) for json or anything else.
