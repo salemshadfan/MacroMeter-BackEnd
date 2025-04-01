@@ -110,8 +110,8 @@ def generate_gpt_prompt(image_path):
             filtered_concepts.append(f"{concept.name} {concept.value:.2f}")
    
     prompt = f"""
-                Based on the image uploaded alongside confidence scores , please estimate what the food is and the nutritional information (calories, protein, fat, and carbs) for it. 
-                
+
+                Based on the following food items with their confidence scores alongside the image of the meal, please estimate what the food is and the nutritional information (calories, protein, fat, and carbs) for it. 
                 Provide the result in the following strict format:
                     success:
                     {{
@@ -121,11 +121,14 @@ def generate_gpt_prompt(image_path):
                         "protein": <value>,
                         "fat": <value>   
                     }}
+                    
                 Here are the food items and their confidence scores:
                 {', '.join(filtered_concepts)}
-                Keep in mind that the scores do not represent the image very precisely so prioritze the image and then the scores if they match.
+
+
                 Always say success at the very first line before anything else.
                 You should return only one food item and provide the nutritional values in key:value format for each item. Do not provide any ranges, extra explanation, or punctuation like periods at the end nor annotations (''' the triple qoutes) for json or anything else.
+
                 """
     return prompt
 
