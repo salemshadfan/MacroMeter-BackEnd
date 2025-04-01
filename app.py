@@ -184,10 +184,10 @@ def analyze_image():
             return jsonify({"error": "Image processing failed.", "details": str(e)}), 500
 
         results = []
+        prompt = api.generate_gpt_prompt(image_path)
         for i in range(4):
             try:
                 print(f"Processing image: {image_path}")  # Debug
-                prompt = api.generate_gpt_prompt(image_path)
                 print(f"Calling GPT API with prompt: {prompt}")  # Debug
                 result = api.GPT_Analyze(prompt, image_path)
                 json_data = api.convert_to_json(result)
