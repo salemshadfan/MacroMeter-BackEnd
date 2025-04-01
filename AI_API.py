@@ -106,7 +106,7 @@ def generate_gpt_prompt(image_path):
     filtered_concepts= []
 
     for concept in concepts:
-        if concept.value > 0.99:  
+        if concept.value >= 1:  
             filtered_concepts.append(f"{concept.name} {concept.value:.2f}")
    
     prompt = f"""
